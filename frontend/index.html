@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="nl">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AthleteHub</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+
+  <div id="login-screen" class="auth-screen" hidden>
+    <form id="login-form" class="auth-card">
+      <div class="brand">
+        <span class="mark">A</span>
+        <strong>AthleteHub</strong>
+      </div>
+
+      <p class="eyebrow">PERSOONLIJK SPORTPLATFORM</p>
+      <h1>Welkom <span>terug.</span></h1>
+      <p class="muted">Meld je aan om verder te gaan.</p>
+
+      <label for="email">E-mailadres</label>
+      <input id="email" type="email" autocomplete="username" placeholder="jouw@email.be" required>
+
+      <label for="password">Wachtwoord</label>
+      <input id="password" type="password" autocomplete="current-password" placeholder="Je wachtwoord" required>
+
+      <p id="login-error" class="error" hidden></p>
+
+      <button type="submit" id="login-button">Aanmelden</button>
+    </form>
+  </div>
+
+  <div id="dashboard" hidden>
+    <header class="topbar">
+      <div>
+        <span class="mark">A</span>
+        <strong>AthleteHub</strong>
+      </div>
+
+      <div class="top-actions">
+        <span class="status" id="connection">Verbonden</span>
+        <button id="account-settings" class="secondary">Account</button>
+        <button id="logout" class="secondary">Uitloggen</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="intro">
+        <p class="eyebrow">PERSOONLIJK SPORTDASHBOARD</p>
+        <h1>Jouw activiteiten.<br><span>Eén overzicht.</span></h1>
+        <p class="muted" id="welcome"></p>
+      </section>
+
+      <section class="metrics">
+        <article class="metric">
+          <p>Activiteiten</p>
+          <strong id="count">—</strong>
+        </article>
+        <article class="metric">
+          <p>Sporttijd</p>
+          <strong id="duration">—</strong>
+        </article>
+        <article class="metric">
+          <p>Afstand</p>
+          <strong id="distance">—</strong>
+        </article>
+      </section>
+
+      <section class="panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">HISTORIE</p>
+            <h2>Recente activiteiten</h2>
+          </div>
+          <button id="refresh">Vernieuwen</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Sport</th>
+                <th>Datum</th>
+                <th>Duur</th>
+                <th>Afstand</th>
+                <th>Bron</th>
+              </tr>
+            </thead>
+            <tbody id="activities">
+              <tr>
+                <td colspan="5" class="empty">Gegevens laden...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel account-panel" id="account-panel" hidden>
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">ACCOUNT</p>
+            <h2>Accountinstellingen</h2>
+          </div>
+          <button id="close-account" class="secondary">Sluiten</button>
+        </div>
+
+        <form id="account-form">
+          <label for="new-email">Nieuw e-mailadres</label>
+          <input id="new-email" type="email" autocomplete="email" placeholder="Nieuw e-mailadres">
+
+          <label for="current-password">Huidig wachtwoord</label>
+          <input id="current-password" type="password" autocomplete="current-password" required>
+
+          <label for="new-password">Nieuw wachtwoord</label>
+          <input id="new-password" type="password" autocomplete="new-password" minlength="12"
+            placeholder="Minimaal 12 tekens">
+
+          <label for="confirm-password">Bevestig nieuw wachtwoord</label>
+          <input id="confirm-password" type="password" autocomplete="new-password" minlength="12"
+            placeholder="Herhaal je nieuwe wachtwoord">
+
+          <p class="muted">
+            Vul alleen de gegevens in die je wilt wijzigen.
+          </p>
+
+          <p id="account-error" class="error" hidden></p>
+          <p id="account-success" class="success" hidden></p>
+
+          <button type="submit" id="save-account">Wijzigingen opslaan</button>
+        </form>
+      </section>
+
+      <p class="footnote">AthleteHub 0.2 · Lokaal opgeslagen</p>
+    </main>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+
+</html>

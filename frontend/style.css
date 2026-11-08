@@ -1,0 +1,332 @@
+:root {
+  color-scheme: dark;
+  --bg: #090d14;
+  --panel: #111925;
+  --line: #243244;
+  --text: #edf3fb;
+  --muted: #91a0b4;
+  --accent: #8bb8ff
+}
+
+* {
+  box-sizing: border-box
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(ellipse at 80% 0%, #18263b 0, transparent 38%), var(--bg);
+  color: var(--text);
+  font: 15px/1.5 Inter, Segoe UI, Arial, sans-serif
+}
+
+.topbar {
+  height: 68px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 max(24px, calc((100% - 1100px)/2))
+}
+
+.topbar>div {
+  display: flex;
+  align-items: center;
+  gap: 11px
+}
+
+.mark {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #08111f;
+  font-weight: 900
+}
+
+.status {
+  font-size: 12px;
+  color: var(--muted)
+}
+
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 54px 24px
+}
+
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--accent);
+  font-weight: 700;
+  margin: 0 0 10px
+}
+
+h1 {
+  font-size: clamp(38px, 6vw, 64px);
+  line-height: 1.03;
+  letter-spacing: -2px;
+  margin: 0
+}
+
+h1 span {
+  color: var(--accent)
+}
+
+.muted {
+  color: var(--muted);
+  margin-top: 16px
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin: 38px 0
+}
+
+.metric,
+.panel {
+  background: rgba(17, 25, 37, .92);
+  border: 1px solid var(--line);
+  border-radius: 16px
+}
+
+.metric {
+  padding: 20px
+}
+
+.metric p {
+  color: var(--muted);
+  margin: 0 0 8px
+}
+
+.metric strong {
+  font-size: 30px
+}
+
+.panel {
+  padding: 22px
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px
+}
+
+h2 {
+  margin: 0;
+  font-size: 21px
+}
+
+button {
+  background: #243b59;
+  border: 1px solid #36577f;
+  color: white;
+  padding: 9px 14px;
+  border-radius: 9px;
+  cursor: pointer
+}
+
+.table-wrap {
+  overflow-x: auto
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  white-space: nowrap
+}
+
+th,
+td {
+  padding: 13px 10px;
+  border-bottom: 1px solid var(--line)
+}
+
+th {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600
+}
+
+td {
+  font-size: 13px
+}
+
+.empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 28px
+}
+
+.footnote {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 24px
+}
+
+@media(max-width:650px) {
+  main {
+    padding: 35px 16px
+  }
+
+  .metrics {
+    grid-template-columns: 1fr;
+    gap: 9px
+  }
+
+  .metric {
+    padding: 15px
+  }
+
+  .topbar {
+    padding: 0 16px
+  }
+
+  .panel {
+    padding: 15px
+  }
+}
+
+
+[hidden] {
+  display: none !important;
+}
+
+.auth-screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 36px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 42px;
+  font-size: 18px;
+}
+
+.auth-card h1 {
+  font-size: 42px;
+}
+
+.auth-card label {
+  display: block;
+  margin: 20px 0 7px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.auth-card input {
+  width: 100%;
+  padding: 13px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: #090d14;
+  color: var(--text);
+  font: inherit;
+  outline: none;
+}
+
+.auth-card input:focus {
+  border-color: var(--accent);
+}
+
+.auth-card button {
+  width: 100%;
+  margin-top: 24px;
+  padding: 13px;
+}
+
+.error {
+  color: #ff9b9b;
+  font-size: 13px;
+}
+
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.secondary {
+  background: transparent;
+}
+
+@media(max-width: 500px) {
+  .auth-card {
+    padding: 25px;
+  }
+
+  .top-actions {
+    gap: 8px;
+  }
+}
+
+.account-panel {
+  margin-top: 24px;
+  scroll-margin-top: 24px;
+}
+
+.account-panel form {
+  max-width: 500px;
+}
+
+.account-panel label {
+  display: block;
+  margin: 18px 0 7px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.account-panel input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: #090d14;
+  color: var(--text);
+  font: inherit;
+  outline: none;
+}
+
+.account-panel input:focus {
+  border-color: var(--accent);
+}
+
+.account-panel button[type="submit"] {
+  margin-top: 18px;
+}
+
+.success {
+  color: #8ee0a8;
+  font-size: 13px;
+}
+
+@media(max-width: 500px) {
+  .top-actions {
+    gap: 6px;
+  }
+
+  .top-actions button {
+    padding: 8px;
+    font-size: 12px;
+  }
+}
