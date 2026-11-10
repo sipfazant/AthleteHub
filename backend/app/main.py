@@ -27,6 +27,10 @@ from fastapi import (
 
 from pydantic import BaseModel, Field
 
+import json
+
+from urllib.error import HTTPError, URLError
+from urllib.request import Request as URLRequest, urlopen
 
 DATABASE_URL = os.environ["DATABASE_URL"]
 
@@ -35,6 +39,14 @@ SESSION_DAYS = 14
 COOKIE_SECURE = os.getenv("COOKIE_SECURE", "false").lower() == "true"
 
 password_hasher = PasswordHasher()
+
+N8N_WEBHOOK_URL = os.getenv(
+    "N8N_WEBHOOK_URL",
+    "http://n8n:5678/webhook/athletehub-ai"
+)
+
+N8N_WEBHOOK_SECRET = os.getenv("N8N_WEBHOOK_SECRET", "")
+N8N_TIMEOUT_SECONDS = 60
 
 app = FastAPI(
     title="AthleteHub API",
@@ -151,6 +163,20 @@ class ActivityIn(BaseModel):
     average_heart_rate: Optional[int] = Field(default=None, ge=1, le=250)
     average_power: Optional[int] = Field(default=None, ge=0)
     notes: Optional[str] = None
+
+class ConversationCreate(BaseModel):
+    title: Optional[str] = Field(
+        default=None,
+        min_length=1,
+        max_length=120
+    )
+
+
+class AIMessageInput(BaseModel):
+    content: str = Field(
+        min_length=1,
+        max_length=12000
+    )
 
 
 @app.on_event("startup")
@@ -537,3 +563,233 @@ def stats(account=Depends(get_current_account)):
         """).fetchone()
 
     return row
+
+def call_n8n(session_id: int, chat_input: str) -> str:
+    if not N8N_WEBHOOK_SECRET:
+        raise HTTPException(
+            status_code=503,
+            detail="AI Trainer is niet geconfigureerd."
+        )
+
+    payload = json.dumps({
+        "sessionId": str(session_id),
+        "chatInput": chat_input
+    }).encode("utf-8")
+
+    request = URLRequest(
+        N8N_WEBHOOK_URL,
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "X-AthleteHub-Secret": N8N_WEBHOOK_SECRET
+        },
+        method="POST"
+    )
+
+    try:
+        with urlopen(
+            request,
+            timeout=N8N_TIMEOUT_SECONDS
+        ) as response:
+            result = json.loads(
+                response.read().decode("utf-8")
+            )
+
+    except (
+        HTTPError,
+        URLError,
+        TimeoutError,
+        OSError,
+        json.JSONDecodeError
+    ) as exc:
+        raise HTTPException(
+            status_code=502,
+            detail="De AI Trainer is momenteel niet bereikbaar."
+        ) from exc
+
+    answer = result.get("output") if isinstance(result, dict) else None
+
+    if not isinstance(answer, str) or not answer.strip():
+        raise HTTPException(
+            status_code=502,
+            detail="De AI Trainer gaf geen geldig antwoord terug."
+        )
+
+    return answer.strip()
+
+
+# NIEUW GESPREK
+
+@app.post("/ai/conversations", status_code=201)
+def create_ai_conversation(
+    data: ConversationCreate = ConversationCreate(),
+    account=Depends(get_current_account)
+):
+    title = data.title.strip() if data.title else "Nieuw gesprek"
+
+    with connect() as conn:
+        conversation = conn.execute("""
+            INSERT INTO athletehub.ai_conversations (title)
+            VALUES (%s)
+            RETURNING id, title, created_at, updated_at
+        """, (title,)).fetchone()
+
+    return conversation
+
+
+# GESPREKKEN OPHALEN
+
+@app.get("/ai/conversations")
+def list_ai_conversations(
+    limit: int = 50,
+    account=Depends(get_current_account)
+):
+    limit = max(1, min(limit, 100))
+
+    with connect() as conn:
+        conversations = conn.execute("""
+            SELECT id, title, created_at, updated_at
+            FROM athletehub.ai_conversations
+            ORDER BY updated_at DESC, id DESC
+            LIMIT %s
+        """, (limit,)).fetchall()
+
+    return conversations
+
+
+# BERICHTEN OPHALEN
+
+@app.get("/ai/conversations/{conversation_id}/messages")
+def list_ai_messages(
+    conversation_id: int,
+    account=Depends(get_current_account)
+):
+    with connect() as conn:
+        conversation = conn.execute("""
+            SELECT id
+            FROM athletehub.ai_conversations
+            WHERE id = %s
+        """, (conversation_id,)).fetchone()
+
+        if not conversation:
+            raise HTTPException(
+                404,
+                "Gesprek niet gevonden."
+            )
+
+        messages = conn.execute("""
+            SELECT
+                id,
+                conversation_id,
+                role,
+                content,
+                metadata,
+                created_at
+            FROM athletehub.ai_messages
+            WHERE conversation_id = %s
+            ORDER BY created_at ASC, id ASC
+        """, (conversation_id,)).fetchall()
+
+    return messages
+
+
+# BERICHT VERSTUREN NAAR AI TRAINER
+
+@app.post(
+    "/ai/conversations/{conversation_id}/messages",
+    status_code=201
+)
+def send_ai_message(
+    conversation_id: int,
+    data: AIMessageInput,
+    account=Depends(get_current_account)
+):
+    content = data.content.strip()
+
+    if not content:
+        raise HTTPException(
+            400,
+            "Bericht mag niet leeg zijn."
+        )
+
+    if not N8N_WEBHOOK_SECRET:
+        raise HTTPException(
+            status_code=503,
+            detail="AI Trainer is niet geconfigureerd."
+        )
+
+    with connect() as conn:
+        conversation = conn.execute("""
+            SELECT id, title
+            FROM athletehub.ai_conversations
+            WHERE id = %s
+        """, (conversation_id,)).fetchone()
+
+        if not conversation:
+            raise HTTPException(
+                404,
+                "Gesprek niet gevonden."
+            )
+
+        user_message = conn.execute("""
+            INSERT INTO athletehub.ai_messages
+                (conversation_id, role, content)
+            VALUES (%s, 'user', %s)
+            RETURNING
+                id,
+                conversation_id,
+                role,
+                content,
+                created_at
+        """, (conversation_id, content)).fetchone()
+
+        generated_title = content.replace("\n", " ").strip()[:60]
+
+        conn.execute("""
+            UPDATE athletehub.ai_conversations
+            SET title = CASE
+                    WHEN title IS NULL OR title = 'Nieuw gesprek'
+                    THEN %s
+                    ELSE title
+                END,
+                updated_at = NOW()
+            WHERE id = %s
+        """, (
+            generated_title or "Nieuw gesprek",
+            conversation_id
+        ))
+
+    # Het gebruikersbericht blijft bewaard bij een n8n-storing.
+    # Er wordt nooit een fictief AI-antwoord opgeslagen.
+
+    answer = call_n8n(
+        conversation_id,
+        content
+    )
+
+    with connect() as conn:
+        assistant_message = conn.execute("""
+            INSERT INTO athletehub.ai_messages
+                (conversation_id, role, content)
+            VALUES (%s, 'assistant', %s)
+            RETURNING
+                id,
+                conversation_id,
+                role,
+                content,
+                created_at
+        """, (
+            conversation_id,
+            answer
+        )).fetchone()
+
+        conn.execute("""
+            UPDATE athletehub.ai_conversations
+            SET updated_at = NOW()
+            WHERE id = %s
+        """, (conversation_id,))
+
+    return {
+        "user_message": user_message,
+        "assistant_message": assistant_message
+    }
