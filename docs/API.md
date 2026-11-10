@@ -1,6 +1,8 @@
-﻿# API-documentatie
+﻿
+# API-documentatie
 
 ## Technologie
+
 De backend gebruikt FastAPI en is intern bereikbaar op poort 8000.
 
 Via Nginx zijn de API-endpoints beschikbaar onder `/api/`.
@@ -26,6 +28,43 @@ http://localhost:8080/api/docs
 | POST | /activities | Activiteit opslaan |
 | GET | /stats | Trainingsstatistieken |
 
+## AI Trainer
+
+Alle AI-endpoints vereisen een geldige gebruikerssessie.
+
+| Methode | Endpoint | Functie |
+|---|---|---|
+| POST | /ai/conversations | Nieuw gesprek aanmaken |
+| GET | /ai/conversations | Gesprekken ophalen |
+| GET | /ai/conversations/{id}/messages | Berichten ophalen |
+| POST | /ai/conversations/{id}/messages | Bericht naar AI sturen |
+
+### Nieuw gesprek
+
+Voorbeeld:
+```json
+{}
+```
+
+### Bericht versturen
+
+Voorbeeld:
+```json
+{
+  "content": "Ik wil mijn conditie verbeteren."
+}
+```
+
+FastAPI bewaart het gebruikersbericht in PostgreSQL, stuurt het naar de n8n-webhook en bewaart vervolgens het AI-antwoord.
+
+De backend gebruikt hiervoor:
+- `N8N_WEBHOOK_URL`
+- `N8N_WEBHOOK_SECRET`
+
+### Antwoord
+
+De endpoint retourneert zowel het gebruikersbericht als het antwoord van de AI.
+
 ## Healthcheck
 
 | Methode | Endpoint | Functie |
@@ -36,6 +75,7 @@ Via Nginx:
 http://localhost:8080/api/health
 
 ## Authenticatiebeveiliging
+
 - Sessiecookies worden gebruikt.
 - Sessietokens worden gehasht opgeslagen.
 - Wachtwoorden worden gehasht met Argon2.
@@ -43,6 +83,7 @@ http://localhost:8080/api/health
 - Beschermde endpoints gebruiken de authenticatieafhankelijkheid van FastAPI.
 
 ## Belangrijk
+
 Controleer altijd de actuele backendcode voordat endpoints worden gewijzigd of toegevoegd.
 
 Deze documentatie moet worden bijgewerkt wanneer API-endpoints veranderen.
