@@ -94,6 +94,8 @@ services:
       - "127.0.0.1:8000:8000"
     environment:
       DATABASE_URL: postgresql://${DB_USER:-athletehub}:${DB_PASSWORD}@postgres:5432/athletehub
+      N8N_WEBHOOK_URL: http://n8n:5678/webhook/athletehub-ai
+      N8N_WEBHOOK_SECRET: ${N8N_WEBHOOK_SECRET}
     depends_on:
       postgres:
         condition: service_healthy
